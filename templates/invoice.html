@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="text-center mb-4">
+            <div class="badge bg-soft-info text-primary mb-2 px-3 py-2 rounded-pill">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Módulo Contable
+            </div>
+            <h2 class="fw-bold">Sumario de Facturación Internacional</h2>
+            <p class="text-muted">Consolida reportes financieros y totales desde tus archivos de sumario.</p>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-4">
+                <form action="/upload-invoice" method="post" enctype="multipart/form-data">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-upload text-secondary"></i>
+                                </span>
+                                <input type="file" name="file" id="invoiceFile" class="form-control bg-light border-start-0" accept=".xlsm, .xlsx" required onchange="updateInvoiceName(this)">
+                            </div>
+                            <div id="invoice-file-name" class="small text-primary mt-2 ms-2 fw-bold"></div>
+                        </div>
+                        <div class="col-md-4 d-grid">
+                            <button type="submit" class="btn btn-dark shadow-sm">
+                                <i class="fas fa-calculator me-2"></i> Procesar Facturas
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row mb-4 g-3 text-center">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm border-bottom border-4 border-primary">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted small fw-bold">Total Facturado</h6>
+                        <h2 class="fw-bold mb-0 text-dark">$ 0.00</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm border-bottom border-4 border-success">
+                    <div class="card-body">
+                        <h6 class="text-uppercase text-muted small fw-bold">Documentos Procesados</h6>
+                        <h2 class="fw-bold mb-0 text-dark">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-secondary"></i>Detalle de Transacciones</h6>
+            </div>
+            <div class="table-responsive p-3">
+                <table class="table table-hover align-middle border-top">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">Fecha</th>
+                            <th class="border-0">Nº Factura</th>
+                            <th class="border-0">Cliente</th>
+                            <th class="border-0 text-end">Subtotal</th>
+                            <th class="border-0 text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" class="py-5 text-center text-muted">
+                                <i class="fas fa-folder-open fa-2x mb-3 d-block opacity-25"></i>
+                                No se han procesado datos. Sube un archivo para ver el listado.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateInvoiceName(input) {
+        const display = document.getElementById('invoice-file-name');
+        if (input.files && input.files.length > 0) {
+            display.innerHTML = '<i class="fas fa-check-circle me-1"></i> Listo para procesar: ' + input.files[0].name;
+        }
+    }
+</script>
+
+<style>
+    .bg-soft-info { background-color: #e1f5fe; }
+    .table thead th { font-size: 0.85rem; letter-spacing: 0.5px; }
+    .card { border-radius: 12px; }
+</style>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="text-center mb-5">
+    <h1 class="display-4 fw-bold text-dark">Panel de Control</h1>
+    <p class="lead text-muted">Selecciona el módulo de operación para hoy</p>
+</div>
+
+<div class="row g-4 justify-content-center">
+    <div class="col-md-5">
+        <div class="card h-100 shadow-sm module-card card-blue">
+            <div class="card-body p-5 text-center">
+                <div class="icon-wrapper mb-4">
+                    <i class="fas fa-boxes-packing fa-4x text-blue"></i>
+                </div>
+                <h2 class="fw-bold h3">Lista de Empaque</h2>
+                <p class="text-muted mb-4">Gestión de pesos, dimensiones y cubicaje de exportación.</p>
+                <a href="/lista-empaque" class="btn btn-blue-vivell btn-lg w-100 shadow-sm">
+                    Abrir Módulo <i class="fas fa-arrow-right ms-2"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card h-100 shadow-sm module-card card-red">
+            <div class="card-body p-5 text-center">
+                <div class="icon-wrapper mb-4">
+                    <i class="fas fa-tools fa-4x text-red"></i>
+                </div>
+                <h2 class="fw-bold h3">Sumario Factura</h2>
+                <p class="text-muted mb-4">Consolidación de reportes, totales y saldos contables.</p>
+                <button class="btn btn-red-development btn-lg w-100 shadow-sm" disabled>
+                    <i class="fas fa-wrench me-2"></i>Módulo en Desarrollo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 1. Colores Corporativos Vivell */
+    .text-blue { color: #00aae4; }
+    .text-green { color: #8dc63f; }
+    .text-red { color: #dc3545; }
+    
+    .btn-blue-vivell { 
+        background-color: #00aae4; 
+        color: white; 
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-green-vivell { 
+        background-color: #8dc63f; 
+        color: white; 
+        border: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-red-development { 
+        background-color: #dc3545; 
+        color: white; 
+        border: none;
+        cursor: not-allowed;
+        opacity: 0.8;
+    }
+    
+    .btn-blue-vivell:hover, .btn-green-vivell:hover { 
+        color: white; 
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+    }
+
+    /* 2. Estructura de la Tarjeta (Corregida para evitar parpadeo) */
+    .module-card {
+        border: 1px solid #eee;
+        border-radius: 15px;
+        background: white;
+        position: relative;
+        overflow: hidden; /* Necesario para que el brillo no se salga */
+        transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease, border-color 0.3s ease;
+        
+        /* Estabilizadores de imagen */
+        backface-visibility: hidden;
+        -webkit-font-smoothing: subpixel-antialiased;
+        transform: translateZ(0);
+    }
+
+    /* Animación de elevación al pasar el mouse */
+    .module-card:hover {
+        transform: translateY(-10px); /* Un poco menos agresivo para evitar el "loop" de hover */
+        box-shadow: 0 15px 35px rgba(0,0,0,0.12) !important;
+        border-color: rgba(0,0,0,0.05);
+    }
+
+    /* Bordes inferiores de colores */
+    .card-blue:hover { border-bottom: 5px solid #00aae4; }
+    .card-green:hover { border-bottom: 5px solid #8dc63f; }
+    .card-red:hover { border-bottom: 5px solid #dc3545; }
+
+    /* 3. Animación de los Iconos */
+    .icon-wrapper {
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .module-card:hover .icon-wrapper {
+        transform: scale(1.15) rotate(5deg);
+    }
+
+    /* 4. Efecto de brillo (CORREGIDO) */
+    /* Usamos ::before para que no interfiera con otros elementos */
+    .module-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150%; /* Fuera de la vista */
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            to right,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent
+        );
+        transform: skewX(-25deg);
+        transition: 0.7s;
+        z-index: 1;
+        pointer-events: none; /* ESTO EVITA EL TITILEO: el mouse ignora el brillo */
+    }
+
+    .module-card:hover::before {
+        left: 150%; /* Cruza toda la tarjeta */
+    }
+
+    /* Aseguramos que el contenido esté por encima del brillo */
+    .card-body {
+        position: relative;
+        z-index: 2;
+    }
+</style>
+{% endblock %}
