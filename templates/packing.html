@@ -26,6 +26,8 @@
                     </div>
 
                     <form id="packingForm" action="{{ url_for('procesar_packing') }}" method="POST">
+                        <input type="hidden" id="formatoInput" name="formato" value="pdf">
+
                         <div class="row g-4">
                             <div class="col-md-6 col-lg-3">
                                 <label class="form-label fw-bold text-secondary small">Compañía</label>
@@ -59,11 +61,22 @@
                                 </div>
                             </div>
 
+                            <!-- BOTONES PDF y EXCEL -->
                             <div class="col-12 mt-5">
-                                <button id="submitBtn" type="button" class="btn btn-blue-vivell btn-lg w-100 py-3 shadow-sm rounded-pill transition-all fw-bold">
-                                    <i class="fas fa-file-pdf me-2"></i> Generar y Descargar Reporte
-                                </button>
+                                <div class="d-flex gap-3">
+                                    <button id="btnPDF" type="button"
+                                            class="btn btn-blue-vivell btn-lg flex-fill py-3 shadow-sm rounded-pill fw-bold transition-all"
+                                            onclick="enviarFormato('pdf')">
+                                        <i class="fas fa-file-pdf me-2"></i> Descargar PDF
+                                    </button>
+                                    <button id="btnExcel" type="button"
+                                            class="btn btn-excel btn-lg flex-fill py-3 shadow-sm rounded-pill fw-bold transition-all"
+                                            onclick="enviarFormato('excel')">
+                                        <i class="fas fa-file-excel me-2"></i> Descargar Excel
+                                    </button>
+                                </div>
                             </div>
+
                         </div>
                     </form>
                 </div>
@@ -79,16 +92,17 @@
     </div>
 </div>
 
+<!-- MODAL DE CARGA -->
 <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-2xl" style="border-radius: 24px;">
             <div class="modal-body text-center py-5">
                 <div class="loader-container mb-4">
                     <div class="spinner-border text-blue-vivell" role="status" style="width: 4rem; height: 4rem; border-width: 0.25rem;"></div>
-                    <i class="fas fa-file-pdf loader-icon text-blue-vivell"></i>
+                    <i id="loaderIcon" class="fas fa-file-pdf loader-icon text-blue-vivell"></i>
                 </div>
                 <h4 class="fw-bold text-dark">Procesando Reporte</h4>
-                <p class="text-muted px-4">Estamos extrayendo los datos y construyendo tu PDF. Esto puede tomar unos segundos.</p>
+                <p id="loaderMsg" class="text-muted px-4">Estamos extrayendo los datos y construyendo tu archivo. Esto puede tomar unos segundos.</p>
             </div>
         </div>
     </div>
@@ -98,10 +112,11 @@
     :root {
         --vivell-blue: #00aae4;
         --vivell-blue-dark: #008fbf;
+        --vivell-green: #8dc63f;
+        --vivell-green-dark: #72a432;
         --soft-blue: rgba(0, 170, 228, 0.08);
     }
 
-    /* Tarjeta y Efectos */
     .custom-card {
         border-radius: 24px !important;
         background: #ffffff;
@@ -109,10 +124,9 @@
 
     .top-accent {
         height: 6px;
-        background: linear-gradient(90deg, var(--vivell-blue), #8dc63f);
+        background: linear-gradient(90deg, var(--vivell-blue), var(--vivell-green));
     }
 
-    /* Inputs Personalizados */
     .input-group-custom {
         border-radius: 12px;
         overflow: hidden;
@@ -142,7 +156,6 @@
         box-shadow: none;
     }
 
-    /* Iconos y Formas */
     .icon-shape {
         width: 56px;
         height: 56px;
@@ -152,27 +165,49 @@
         border-radius: 16px;
     }
 
-    .bg-soft-blue { background-color: var(--soft-blue); }
+    .bg-soft-blue  { background-color: var(--soft-blue); }
     .text-blue-vivell { color: var(--vivell-blue) !important; }
 
-    /* Botón Vivell */
+    /* Botón PDF — azul Vivell */
     .btn-blue-vivell {
         background-color: var(--vivell-blue);
         color: white;
         border: none;
         letter-spacing: 0.5px;
     }
-
     .btn-blue-vivell:hover {
         background-color: var(--vivell-blue-dark);
         transform: translateY(-3px);
         box-shadow: 0 12px 20px -10px rgba(0, 170, 228, 0.5) !important;
         color: white;
     }
+    .btn-blue-vivell:active  { transform: translateY(-1px); }
+    .btn-blue-vivell:disabled {
+        background-color: var(--vivell-blue);
+        opacity: 0.75;
+        color: white;
+    }
 
-    .btn-blue-vivell:active { transform: translateY(-1px); }
+    /* Botón Excel — verde Vivell */
+    .btn-excel {
+        background-color: var(--vivell-green);
+        color: white;
+        border: none;
+        letter-spacing: 0.5px;
+    }
+    .btn-excel:hover {
+        background-color: var(--vivell-green-dark);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px -10px rgba(141, 198, 63, 0.5) !important;
+        color: white;
+    }
+    .btn-excel:active  { transform: translateY(-1px); }
+    .btn-excel:disabled {
+        background-color: var(--vivell-green);
+        opacity: 0.75;
+        color: white;
+    }
 
-    /* Animación del Loader */
     .loader-container { position: relative; display: inline-block; }
     .loader-icon {
         position: absolute;
@@ -187,59 +222,78 @@
 </style>
 
 <script>
-    document.getElementById('submitBtn').addEventListener('click', function() {
-        const form = document.getElementById('packingForm');
-        const formData = new FormData(form);
-        
-        // Validación
-        if (!formData.get('cia') || !formData.get('tipo_docto') || !formData.get('consec_ini') || !formData.get('consec_fin')) {
-            alert('Por favor complete todos los campos antes de continuar.');
-            return;
-        }
-        
-        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
-        loadingModal.show();
-        
-        const btn = this;
-        btn.disabled = true;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando Archivo...';
-        
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => {
-            if (response.ok) return response.blob().then(blob => ({ blob, response }));
-            return response.json().then(data => { throw new Error(data.error || 'Error en el servidor'); });
-        })
-        .then(({ blob, response }) => {
-            const contentDisposition = response.headers.get('Content-Disposition');
-            let filename = `Packing_List_${formData.get('consec_ini')}.pdf`;
-            
-            if (contentDisposition) {
-                const matches = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-                if (matches && matches[1]) filename = matches[1].replace(/['"]/g, '');
-            }
-            
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            loadingModal.hide();
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        })
-        .catch(error => {
-            loadingModal.hide();
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-            alert('Atención: ' + error.message);
-        });
+function enviarFormato(fmt) {
+    const form     = document.getElementById('packingForm');
+    const formData = new FormData(form);
+
+    // Validación
+    if (!formData.get('cia') || !formData.get('tipo_docto') ||
+        !formData.get('consec_ini') || !formData.get('consec_fin')) {
+        alert('Por favor complete todos los campos antes de continuar.');
+        return;
+    }
+
+    // Indicamos el formato al servidor
+    document.getElementById('formatoInput').value = fmt;
+    formData.set('formato', fmt);
+
+    // Ajustamos el ícono del modal según el formato
+    const esPDF = fmt === 'pdf';
+    document.getElementById('loaderIcon').className =
+        esPDF ? 'fas fa-file-pdf loader-icon text-blue-vivell'
+              : 'fas fa-file-excel loader-icon' ;
+    document.getElementById('loaderIcon').style.color = esPDF ? '' : 'var(--vivell-green)';
+    document.getElementById('loaderMsg').textContent =
+        esPDF ? 'Estamos construyendo tu PDF. Esto puede tomar unos segundos.'
+              : 'Estamos construyendo tu Excel. Esto puede tomar unos segundos.';
+
+    // Mostramos el modal y bloqueamos el botón activo
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+
+    const btnActivo     = document.getElementById(esPDF ? 'btnPDF' : 'btnExcel');
+    const originalHTML  = btnActivo.innerHTML;
+    btnActivo.disabled  = true;
+    btnActivo.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando...';
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => {
+        if (response.ok) return response.blob().then(blob => ({ blob, response }));
+        return response.json().then(data => { throw new Error(data.error || 'Error en el servidor'); });
+    })
+    .then(({ blob, response }) => {
+        const ext      = esPDF ? 'pdf' : 'xlsx';
+        const consec   = formData.get('consec_ini');
+
+        // Intentamos leer el filename del header, si no usamos el default
+        const cd       = response.headers.get('Content-Disposition') || '';
+        const match    = cd.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        const filename = match ? match[1].replace(/['"]/g, '') : `Packing_List_${consec}.${ext}`;
+
+        // Disparamos la descarga
+        const url = window.URL.createObjectURL(blob);
+        const a   = document.createElement('a');
+        a.href     = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        loadingModal.hide();
+        btnActivo.disabled  = false;
+        btnActivo.innerHTML = originalHTML;
+    })
+    .catch(error => {
+        loadingModal.hide();
+        btnActivo.disabled  = false;
+        btnActivo.innerHTML = originalHTML;
+        alert('Atención: ' + error.message);
     });
+}
 </script>
 {% endblock %}
