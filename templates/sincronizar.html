@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <h1 class="fw-bold text-dark mb-2">Sincronización de Precios</h1>
+                <p class="lead text-muted">Extrae de UnoEE, actualiza SQL y descarga Excel</p>
+                <div class="mx-auto" style="width: 60px; height: 4px; background: #8dc63f; border-radius: 2px;"></div>
+            </div>
+
+            <div class="card border-0 shadow-lg overflow-hidden custom-card">
+                <div style="height: 6px; background: linear-gradient(90deg, #8dc63f, #00aae4);"></div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <form id="syncForm" action="/ejecutar-sincronizacion" method="POST">
+                        <h5 class="fw-bold mb-4"><i class="fas fa-list-check text-green me-2"></i>Seleccione las Listas</h5>
+                        
+                        <div class="row g-3 mb-4">
+                            {% for lista in ['IN1', 'IN2', 'IN4', 'IN8', 'PVF', 'VEN', 'PMX'] %}
+                            <div class="col-md-4">
+                                <div class="form-check p-3 border rounded shadow-sm hover-light">
+                                    <input class="form-check-input ms-0 me-2" type="checkbox" name="listas" value="{{lista}}" id="chk{{lista}}" checked>
+                                    <label class="form-check-label fw-bold" for="chk{{lista}}">Lista {{lista}}</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid mt-5">
+                            <button type="submit" id="btnSync" class="btn btn-green-vivell btn-lg py-3 shadow rounded-pill fw-bold">
+                                <i class="fas fa-sync-alt me-2"></i> Ejecutar Actualización Completa
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="statusMessage" class="mt-4 text-center d-none">
+                        <div class="spinner-border text-success mb-2" role="status"></div>
+                        <p class="text-muted small">Procesando datos en SIESA y SQL... El archivo se descargará automáticamente al finalizar.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('syncForm').onsubmit = function() {
+        const btn = document.getElementById('btnSync');
+        const status = document.getElementById('statusMessage');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-cog fa-spin me-2"></i> Procesando...';
+        status.classList.remove('d-none');
+
+        // Como la descarga de archivo no recarga la página, 
+        // reseteamos el botón después de unos segundos para que puedan volver a usarlo
+        setTimeout(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Ejecutar Actualización Completa';
+            status.classList.add('d-none');
+        }, 10000); 
+    };
+</script>
+
+<style>
+    .text-green { color: #8dc63f; }
+    .btn-green-vivell { background-color: #8dc63f; color: white; border: none; transition: 0.3s; }
+    .btn-green-vivell:hover { background-color: #72a432; color: white; transform: translateY(-3px); }
+    .custom-card { border-radius: 24px !important; }
+    .hover-light:hover { background-color: #f8f9fa; border-color: #8dc63f !important; cursor: pointer; }
+</style>
+{% endblock %}
