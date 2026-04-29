@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, send_file, flash, redirect, url_for
+from flask import Flask, render_template, request, send_file, flash, redirect, url_for, jsonify
 from io import BytesIO
+import os
 from a_extr import generar_pdf_empaque, generar_excel_empaque
 
 app = Flask(__name__)
@@ -22,7 +23,10 @@ def procesar_packing():
     formato    = request.form.get('formato', 'pdf')   # 'pdf' o 'excel'
 
     if not all([cia, tipo, consec_ini, consec_fin]):
-        flash("Todos los campos son obligatorios")
+        error_msg = "Todos los campos son obligatorios"
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': error_msg}), 400
+        flash(error_msg)
         return redirect(url_for('lista_empaque'))
 
     app.logger.info(f"Procesando packing: cia={cia}, tipo={tipo}, ini={consec_ini}, fin={consec_fin}, fmt={formato}")
@@ -38,7 +42,10 @@ def procesar_packing():
         return send_file(BytesIO(datos), as_attachment=True,
                          download_name=nombre, mimetype=mimetype)
     else:
-        flash("Error: No se encontraron datos o no fue posible generar el reporte.")
+        error_msg = "Error: No se encontraron datos en SIESA o no fue posible generar el reporte."
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': error_msg}), 500
+        flash(error_msg)
         return redirect(url_for('lista_empaque'))
 
 if __name__ == '__main__':
