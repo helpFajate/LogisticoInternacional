@@ -18,7 +18,7 @@ class ReporteEmpaque(FPDF):
     def __init__(self, datos_encabezado, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.datos_envio = datos_encabezado
-        self.ruta_base_img = r"C:\Users\mesa_ayuda\Desktop\Internacional\imagenes"
+        self.ruta_base_img = r"C:\inetpub\wwwroot\LogisticoInternacional\imagenes"
 
     def header(self):
         if self.page_no() == 1:
@@ -220,9 +220,26 @@ def generar_pdf_empaque(cia, tipo_docto, consec_inicial, consec_final):
         for _, row in items.iterrows():
             txt_desc = str(row['f2_desc_crit1'])
             txt_comp = str(row['f2_desc_crit2'])
-            l_desc   = (pdf.get_string_width(txt_desc) // w[3]) + 1
-            l_comp   = (pdf.get_string_width(txt_comp) // w[4]) + 1
-            h_fila   = max(7, max(l_desc, l_comp) * 4)
+            
+            # Calcular altura basada en ancho de columna y altura de línea (3mm por línea)
+            # Usar 3.5mm como altura de línea para texto de 7pt
+            h_linea = 3.5
+            
+            # Calcular número de líneas necesarias para descripción
+            num_lineas_desc = 1
+            if len(txt_desc) > 0:
+                ancho_disponible = w[3] - 2  # restar márgenes
+                num_lineas_desc = max(1, int((pdf.get_string_width(txt_desc) / ancho_disponible) + 0.5))
+            
+            # Calcular número de líneas necesarias para composición
+            num_lineas_comp = 1
+            if len(txt_comp) > 0:
+                ancho_disponible = w[4] - 2  # restar márgenes
+                num_lineas_comp = max(1, int((pdf.get_string_width(txt_comp) / ancho_disponible) + 0.5))
+            
+            # Altura de fila es el máximo entre descripción y composición, mínimo 7
+            max_lineas = max(num_lineas_desc, num_lineas_comp)
+            h_fila = max(7, max_lineas * h_linea)
 
             pdf.check_page_break(h_fila)
             curr_y = pdf.get_y()
@@ -230,9 +247,11 @@ def generar_pdf_empaque(cia, tipo_docto, consec_inicial, consec_final):
             pdf.cell(w[1], h_fila, str(row['f2_ext2_det']),    border=1, align="C")
             pdf.cell(w[2], h_fila, str(row['f2_id_ext1_det']), border=1, align="C")
             x_desc = pdf.get_x()
-            pdf.multi_cell(w[3], h_fila / l_desc if l_desc > 0 else h_fila, txt_desc, border=1)
+            # Usar altura de línea consistente
+            pdf.multi_cell(w[3], h_linea, txt_desc, border=1, max_line_height=h_linea)
             pdf.set_xy(x_desc + w[3], curr_y)
-            pdf.multi_cell(w[4], h_fila / l_comp if l_comp > 0 else h_fila, txt_comp, border=1)
+            # Usar altura de línea consistente
+            pdf.multi_cell(w[4], h_linea, txt_comp, border=1, max_line_height=h_linea)
             pdf.set_xy(x_desc + w[3] + w[4], curr_y)
             v_can = float(row['f2_cantidad'])
             pdf.cell(w[5], h_fila, f"{v_can:.0f}", border=1, align="C",
@@ -353,7 +372,7 @@ def generar_excel_empaque(cia, tipo_docto, consec_inicial, consec_final):
     ws['F5'].border    = b_all()
 
     # Logos
-    ruta_img = r"C:\Users\mesa_ayuda\Desktop\Internacional\imagenes"
+    ruta_img = r"C:\inetpub\wwwroot\LogisticoInternacional\imagenes"
     for nombre_img, celda, ancho_px, alto_px in [
         ("vivell.png",    'A1', 160, 55),
         ("INVIMA.png",    'C1',  95, 45),
